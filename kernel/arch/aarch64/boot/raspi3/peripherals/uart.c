@@ -77,7 +77,7 @@ static void early_uart_send(unsigned int c)
 void uart_send_string(char *str)
 {
         /* LAB 1 TODO 3 BEGIN */
-        for (; str != '\0'; str++) {
+        for (; *str != '\0'; str++) {
                 early_uart_send(*str);
         }
         /* LAB 1 TODO 3 END */
