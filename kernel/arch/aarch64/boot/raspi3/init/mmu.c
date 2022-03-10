@@ -8,6 +8,10 @@ typedef unsigned int u32;
 #define PERIPHERAL_BASE (0x3F000000UL)
 #define PHYSMEM_END     (0x40000000UL)
 
+#define HIGH_PHYSMEM_START   (0xffffff0000000000UL)
+#define HIGH_PERIPHERAL_BASE (0xffffff003F000000UL)
+#define HIGH_PHYSMEM_END     (0xffffff0040000000UL)
+
 /* The number of entries in one page table page */
 #define PTP_ENTRIES 512
 /* The size of one page table page */
@@ -32,6 +36,7 @@ u64 boot_ttbr1_l2[PTP_ENTRIES] ALIGN(PTP_SIZE);
 #define DEVICE_MEMORY  (0x1UL << 2)
 
 #define SIZE_2M (2UL * 1024 * 1024)
+#define SIZE_1G (2UL * 1024 * 1024 * 1024)
 
 #define GET_L0_INDEX(x) (((x) >> (12 + 9 + 9 + 9)) & 0x1ff)
 #define GET_L1_INDEX(x) (((x) >> (12 + 9 + 9)) & 0x1ff)
@@ -74,13 +79,35 @@ void init_boot_pt(void)
 
         /* TTBR1_EL1 0-1G */
         /* LAB 2 TODO 1 BEGIN */
+        vaddr = HIGH_PHYSMEM_START;
         /* Step 1: set L0 and L1 page table entry */
-
+        boot_ttbr1_l0[GET_L0_INDEX(vaddr)] = ((u64)boot_ttbr1_l1) | IS_TABLE
+                                             | IS_VALID | NG;
+        boot_ttbr1_l1[GET_L1_INDEX(vaddr)] = ((u64)boot_ttbr1_l2) | IS_TABLE
+                                             | IS_VALID | NG;
 
         /* Step 2: map PHYSMEM_START ~ PERIPHERAL_BASE with 2MB granularity */
-
+        for (; vaddr < HIGH_PERIPHERAL_BASE; vaddr += SIZE_2M) {
+                boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
+                        (vaddr & 0xffffffffff) /* high mem, va = pa */
+                        | UXN /* Unprivileged execute never */
+                        | ACCESSED /* Set access flag */
+                        | NG /* Mark as not global */
+                        | INNER_SHARABLE /* Sharebility */
+                        | NORMAL_MEMORY /* Normal memory */
+                        | IS_VALID;
+        }
 
         /* Step 2: map PERIPHERAL_BASE ~ PHYSMEM_END with 2MB granularity */
+        for (vaddr = HIGH_PERIPHERAL_BASE; vaddr < HIGH_PHYSMEM_END; vaddr += SIZE_2M) {
+                boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
+                        (vaddr & 0xffffffffff) /* high mem, va = pa */
+                        | UXN /* Unprivileged execute never */
+                        | ACCESSED /* Set access flag */
+                        | NG /* Mark as not global */
+                        | NORMAL_MEMORY /* Device memory */
+                        | IS_VALID;
+        }
 
         /* LAB 2 TODO 1 END */
 
