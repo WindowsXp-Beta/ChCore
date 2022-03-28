@@ -89,7 +89,7 @@ void init_boot_pt(void)
         /* Step 2: map PHYSMEM_START ~ PERIPHERAL_BASE with 2MB granularity */
         for (; vaddr < HIGH_PERIPHERAL_BASE; vaddr += SIZE_2M) {
                 boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
-                        (vaddr & 0xffffffffff) /* high mem, va = pa */
+                        (vaddr & 0xffffffffff) /* high mem needs a mask */
                         | UXN /* Unprivileged execute never */
                         | ACCESSED /* Set access flag */
                         | NG /* Mark as not global */
@@ -99,13 +99,14 @@ void init_boot_pt(void)
         }
 
         /* Step 2: map PERIPHERAL_BASE ~ PHYSMEM_END with 2MB granularity */
-        for (vaddr = HIGH_PERIPHERAL_BASE; vaddr < HIGH_PHYSMEM_END; vaddr += SIZE_2M) {
+        for (vaddr = HIGH_PERIPHERAL_BASE; vaddr < HIGH_PHYSMEM_END;
+             vaddr += SIZE_2M) {
                 boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
-                        (vaddr & 0xffffffffff) /* high mem, va = pa */
+                        (vaddr & 0xffffffffff) /* high mem needs a mask */
                         | UXN /* Unprivileged execute never */
                         | ACCESSED /* Set access flag */
                         | NG /* Mark as not global */
-                        | NORMAL_MEMORY /* Device memory */
+                        | DEVICE_MEMORY /* Device memory */
                         | IS_VALID;
         }
 
