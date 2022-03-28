@@ -492,7 +492,7 @@ void reset_pt()
                                 virt_to_phys(vaddr),
                                 HIGH_PHYSMEM_END - HIGH_PERIPHERAL_BASE,
                                 flags);
-        __asm__ ("msr ttbr1_el1,%0":"=a"(new_ttbr1_l0));
+        __asm__("msr ttbr1_el1,%0":"+r"(new_ttbr1_l0));
 }
 
 #ifdef CHCORE_KERNEL_TEST
