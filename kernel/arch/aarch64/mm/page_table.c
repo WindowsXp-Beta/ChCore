@@ -7,7 +7,7 @@
 #include <mm/kmalloc.h>
 #include <mm/mm.h>
 #include <arch/mmu.h>
-
+#include <arch/sync.h>
 #include <arch/mm/page_table.h>
 
 extern void set_ttbr0_el1(paddr_t);
@@ -492,7 +492,8 @@ void reset_pt()
                                 virt_to_phys(vaddr),
                                 HIGH_PHYSMEM_END - HIGH_PERIPHERAL_BASE,
                                 flags);
-        __asm__("msr ttbr1_el1,%0":"+r"(new_ttbr1_l0));
+        asm ("msr ttbr1_el1,%0":"+r"(new_ttbr1_l0));
+        flush_tlb_all();
 }
 
 #ifdef CHCORE_KERNEL_TEST
