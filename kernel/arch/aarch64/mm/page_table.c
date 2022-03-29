@@ -1,3 +1,4 @@
+#include "image.h"
 #include <common/util.h>
 #include <common/vars.h>
 #include <common/macro.h>
@@ -333,7 +334,7 @@ int map_range_in_pgtbl_huge(void *pgtbl, vaddr_t va, paddr_t pa, size_t len,
                 kwarn("%s: input arg is NULL.\n", __func__);
                 return -1;
         }
-        while (len > PAGE_SIZE_1G) {
+        while (len >= PAGE_SIZE_1G) {
                 ptp_t *cur_ptp = pgtbl, *next_ptp;
                 pte_t *pte_p;
                 int result =
@@ -350,7 +351,7 @@ int map_range_in_pgtbl_huge(void *pgtbl, vaddr_t va, paddr_t pa, size_t len,
                 pa += PAGE_SIZE_1G;
         }
 
-        while (len > PAGE_SIZE_2M) {
+        while (len >= PAGE_SIZE_2M) {
                 ptp_t *cur_ptp = pgtbl, *next_ptp;
                 pte_t *pte_p;
                 for (int level = 0; level < 2; level++) {
@@ -426,6 +427,7 @@ extern char rodata_start;
 extern char _edata;
 extern char _bss_start;
 extern char _bss_end;
+extern char img_end;
 
 void reset_pt()
 {
@@ -437,9 +439,10 @@ void reset_pt()
         u64 _edata_v = (u64)&_edata;
         u64 _bss_start_v = (u64)&_bss_start;
         u64 _bss_end_v = (u64)&_bss_end;
+        u64 img_end_v = (u64)&img_end;
         kwarn("init_end is %lx\ttext_end is %lx\tdata_start is %lx\t"
               "data_end is %lx\trodata_start is %lx\t_edata is %lx\t"
-              "_bss_start is %lx\t_bss_end is %lx\n",
+              "_bss_start is %lx\t_bss_end is %lx\timg_end is %lx\n",
               init_end_v,
               text_end_v,
               data_start_v,
@@ -447,11 +450,12 @@ void reset_pt()
               rodata_start_v,
               _edata_v,
               _bss_start_v,
-              _bss_end_v);
+              _bss_end_v,
+              img_end_v);
         u64 vaddr;
         vmr_prop_t flags;
         ptp_t *new_ttbr1_l0 = get_pages(0);
-
+        memset(new_ttbr1_l0, 0, PAGE_SIZE);
         /* .text if from init_end to text_end */
         flags = VMR_EXEC | VMR_READ;
         vaddr = HIGH_PHYSMEM_START + init_end_v;
@@ -485,14 +489,41 @@ void reset_pt()
                                 _bss_end_v - _bss_start_v,
                                 flags);
 
+        /* space for malloc is from img_end to 0x3f00000 */
+        vaddr = HIGH_PHYSMEM_START + img_end_v;
+        flags = VMR_READ | VMR_WRITE;
+        map_range_in_pgtbl(new_ttbr1_l0,
+                           vaddr,
+                           virt_to_phys(vaddr),
+                           HIGH_PERIPHERAL_BASE - vaddr,
+                           flags);
+        /* device memory is from 0x3f000000 to 0x40000000 */
         vaddr = HIGH_PERIPHERAL_BASE;
-        flags = VMR_DEVICE;
+        flags = VMR_DEVICE | VMR_EXEC;
         map_range_in_pgtbl_huge(new_ttbr1_l0,
                                 vaddr,
                                 virt_to_phys(vaddr),
                                 HIGH_PHYSMEM_END - HIGH_PERIPHERAL_BASE,
                                 flags);
-        asm ("msr ttbr1_el1,%0":"+r"(new_ttbr1_l0));
+
+        /* local peripherals memory is from 0x40000000 to 0x80000000 */
+        vaddr = HIGH_PHYSMEM_END;
+        flags = VMR_DEVICE;
+        map_range_in_pgtbl_huge(
+                new_ttbr1_l0, vaddr, virt_to_phys(vaddr), PAGE_SIZE_1G, flags);
+        paddr_t pa;
+        pte_t *dummy;
+        query_in_pgtbl(new_ttbr1_l0, 0xffffff000008edcc, &pa, &dummy);
+        BUG_ON(pa != virt_to_phys(0xffffff000008edcc));
+        query_in_pgtbl(new_ttbr1_l0, 0xffffff0000096050, &pa, &dummy);
+        BUG_ON(pa != virt_to_phys(0xffffff0000096050));
+        query_in_pgtbl(new_ttbr1_l0, 0xffffff0000a0c000, &pa, &dummy);
+        BUG_ON(pa != virt_to_phys(0xffffff0000a0c000));
+        query_in_pgtbl(new_ttbr1_l0, 0xffffff003fa0c000, &pa, &dummy);
+        BUG_ON(pa != virt_to_phys(0xffffff003fa0c000));
+        query_in_pgtbl(new_ttbr1_l0, 0xffffff0040005000, &pa, &dummy);
+        BUG_ON(pa != virt_to_phys(0xffffff0040005000));
+        asm("msr ttbr1_el1,%0\nisb" ::"r"(virt_to_phys(new_ttbr1_l0)));
         flush_tlb_all();
 }
 
