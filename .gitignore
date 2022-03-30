@@ -30,3 +30,7 @@ exec_log
 make-tag.sh
 
 __pycache__
+
+kernel.S
+# macOS
+*.DS_store

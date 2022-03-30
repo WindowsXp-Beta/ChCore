@@ -151,3 +151,5 @@ typedef union {
 typedef struct {
         pte_t ent[PTP_ENTRIES];
 } ptp_t;
+
+void reset_pt();
