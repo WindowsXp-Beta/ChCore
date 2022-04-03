@@ -52,7 +52,7 @@ static int set_pte_flags(pte_t *entry, vmr_prop_t flags, int kind)
                 entry->l3_page.UXN = AARCH64_MMU_ATTR_PAGE_UXN;
 
         // EL1 cannot directly execute EL0 accessiable region.
-        entry->l3_page.PXN = AARCH64_MMU_ATTR_PAGE_PXN;
+        // entry->l3_page.PXN = AARCH64_MMU_ATTR_PAGE_PXN;
         // Set AF (access flag) in advance.
         entry->l3_page.AF = AARCH64_MMU_ATTR_PAGE_AF_ACCESSED;
         // Mark the mapping as not global
@@ -499,7 +499,7 @@ void reset_pt()
                            flags);
         /* device memory is from 0x3f000000 to 0x40000000 */
         vaddr = HIGH_PERIPHERAL_BASE;
-        flags = VMR_DEVICE | VMR_EXEC;
+        flags = VMR_DEVICE | VMR_EXEC | VMR_WRITE;
         map_range_in_pgtbl_huge(new_ttbr1_l0,
                                 vaddr,
                                 virt_to_phys(vaddr),
@@ -508,21 +508,9 @@ void reset_pt()
 
         /* local peripherals memory is from 0x40000000 to 0x80000000 */
         vaddr = HIGH_PHYSMEM_END;
-        flags = VMR_DEVICE;
+        flags = VMR_DEVICE | VMR_EXEC | VMR_WRITE;
         map_range_in_pgtbl_huge(
                 new_ttbr1_l0, vaddr, virt_to_phys(vaddr), PAGE_SIZE_1G, flags);
-        paddr_t pa;
-        pte_t *dummy;
-        query_in_pgtbl(new_ttbr1_l0, 0xffffff000008edcc, &pa, &dummy);
-        BUG_ON(pa != virt_to_phys(0xffffff000008edcc));
-        query_in_pgtbl(new_ttbr1_l0, 0xffffff0000096050, &pa, &dummy);
-        BUG_ON(pa != virt_to_phys(0xffffff0000096050));
-        query_in_pgtbl(new_ttbr1_l0, 0xffffff0000a0c000, &pa, &dummy);
-        BUG_ON(pa != virt_to_phys(0xffffff0000a0c000));
-        query_in_pgtbl(new_ttbr1_l0, 0xffffff003fa0c000, &pa, &dummy);
-        BUG_ON(pa != virt_to_phys(0xffffff003fa0c000));
-        query_in_pgtbl(new_ttbr1_l0, 0xffffff0040005000, &pa, &dummy);
-        BUG_ON(pa != virt_to_phys(0xffffff0040005000));
         asm("msr ttbr1_el1,%0\nisb" ::"r"(virt_to_phys(new_ttbr1_l0)));
         flush_tlb_all();
 }
