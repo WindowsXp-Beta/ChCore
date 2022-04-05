@@ -64,9 +64,6 @@ void main(paddr_t boot_flag)
 
         /* Context switch to the picked thread */
         eret_to_thread(switch_context());
-        kwarn("we win here\n");
-        while (1) {
-        }
 
         /* Should provide panic and use here */
         BUG("[FATAL] Should never be here!\n");
