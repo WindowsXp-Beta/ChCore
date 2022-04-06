@@ -85,6 +85,7 @@ static void del_vmr_from_vmspace(struct vmspace *vmspace, struct vmregion *vmr)
         free_vmregion(vmr);
 }
 
+//add the vmregion into the page table(va is gotton from vmregion and pa is from pmo in vmr)
 static int fill_page_table(struct vmspace *vmspace, struct vmregion *vmr)
 {
         size_t pm_size;
@@ -190,6 +191,8 @@ struct vmregion *find_vmr_for_va(struct vmspace *vmspace, vaddr_t addr)
         return NULL;
 }
 
+//create a vmregion corresponding to the pmo, add it into the vmspace
+//and update the page table
 int vmspace_map_range(struct vmspace *vmspace, vaddr_t va, size_t len,
                       vmr_prop_t flags, struct pmobject *pmo)
 {
