@@ -13,6 +13,7 @@
 #include <irq/irq.h>
 #include <object/thread.h>
 
+#include <arch/mm/page_table.h>
 ALIGN(STACK_ALIGNMENT)
 char kernel_stack[PLAT_CPU_NUM][KERNEL_STACK_SIZE];
 
@@ -62,7 +63,7 @@ void main(paddr_t boot_flag)
         void lab2_test_page_table(void);
         lab2_test_page_table();
 #endif /* CHCORE_KERNEL_TEST */
-
+        // reset_pt();
         /* Init exception vector */
         arch_interrupt_init();
         /* LAB 4 TODO BEGIN */
