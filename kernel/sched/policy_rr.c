@@ -110,11 +110,11 @@ struct thread *rr_sched_choose_thread(void)
 {
         struct thread *thread = NULL;
         /* LAB 4 TODO BEGIN */
-        u32 cpu_id = smp_get_cpu_id();
-        if (rr_ready_queue_meta[cpu_id].queue_len == 0) {
-                thread = &idle_threads[cpu_id];
+        u32 cpuid = smp_get_cpu_id();
+        if (rr_ready_queue_meta[cpuid].queue_len == 0) {
+                thread = &idle_threads[cpuid];
         } else {
-                thread = list_entry(rr_ready_queue_meta[cpu_id].queue_head.next,
+                thread = list_entry(rr_ready_queue_meta[cpuid].queue_head.next,
                                     struct thread,
                                     ready_queue_node);
         }

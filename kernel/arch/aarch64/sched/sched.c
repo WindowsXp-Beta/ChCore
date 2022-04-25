@@ -17,7 +17,7 @@ void arch_idle_ctx_init(struct thread_ctx *idle_ctx, void (*func)(void))
         /* SPSR_EL1 => Exit to EL1 */
         ec->reg[SPSR_EL1] = SPSR_EL1_KERNEL;
         /* ELR_EL1 => Next PC */
-        ec->reg[ELR_EL1] = (u64)func;
+        ec->reg[ELR_EL1] = (u64)func; // when return from exception handler, pc will be ELR_EL1
 }
 
 inline void arch_switch_context(struct thread *target)

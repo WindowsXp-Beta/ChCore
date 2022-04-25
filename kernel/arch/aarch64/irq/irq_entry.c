@@ -38,8 +38,8 @@ void handle_entry_c(int type, u64 esr, u64 address)
 {
         /* Acquire the big kernel lock, if the exception is not from kernel */
         /* LAB 4 TODO BEGIN */
-        if (type >= SYNC_EL0_64
-            || current_thread->thread_ctx->type == TYPE_IDLE) {
+        if (type >= SYNC_EL0_64) {
+        //     || current_thread->thread_ctx->type == TYPE_IDLE) {
                 lock_kernel();
         }
         /* LAB 4 TODO END */
