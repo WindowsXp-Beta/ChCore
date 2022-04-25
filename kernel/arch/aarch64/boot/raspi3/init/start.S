@@ -16,7 +16,7 @@ BEGIN_FUNC(_start)
 	/* Wait for bss clear */
 wait_for_bss_clear:
 	adr	x0, clear_bss_flag
-	ldr	x1, [x0]
+	ldr	x1, [x0] /* x0 takes address of clear_bss_flag */
 	cmp     x1, #0
 	bne	wait_for_bss_clear
 
@@ -35,7 +35,7 @@ wait_until_smp_enabled:
 	/* CPU ID should be stored in x8 from the first line */
 	mov	x1, #8
 	mul	x2, x8, x1
-	ldr	x1, =secondary_boot_flag
+	ldr	x1, =secondary_boot_flag /* x1 takes address of secondary_boot_flag */
 	add	x1, x1, x2
 	ldr	x3, [x1]
 	cbz	x3, wait_until_smp_enabled
