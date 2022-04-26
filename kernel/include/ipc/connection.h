@@ -8,6 +8,7 @@
 /*
  * Used in both server and client register.
  * Stack setting is invalid in client register.
+ * including stack base and size, shared buffer base and size
  */
 struct ipc_vm_config {
         u64 stack_base_addr;
@@ -16,6 +17,7 @@ struct ipc_vm_config {
         u64 buf_size;
 };
 
+// include callback, max clients number, connection bitmap and vm config
 struct server_ipc_config {
         // I dont know how to specify the maximum callback number
         u64 callback;
@@ -45,7 +47,7 @@ struct ipc_connection {
         struct thread *target;
         /* Conn cap in server */
         u64 server_conn_cap;
-        /* Target function */
+        /* Target function: point to the function pointer */
         u64 callback;
 
         /* Shadow server stack top */
