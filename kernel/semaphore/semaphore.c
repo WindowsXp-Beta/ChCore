@@ -23,7 +23,17 @@ s32 wait_sem(struct semaphore *sem, bool is_block)
 {
         s32 ret = 0;
         /* LAB 4 TODO BEGIN */
-
+        sem->sem_count--;
+        if (sem->sem_count < 0 && is_block) {
+                sem->waiting_threads_count++;
+                list_add(&current_thread->sem_queue_node,
+                         &sem->waiting_threads);
+                current_thread->thread_ctx->state = TS_WAITING;
+                obj_put(sem);
+                sys_yield();
+        } else {
+                ret = -EAGAIN;
+        }
         /* LAB 4 TODO END */
         return ret;
 }
@@ -38,7 +48,14 @@ s32 wait_sem(struct semaphore *sem, bool is_block)
 s32 signal_sem(struct semaphore *sem)
 {
         /* LAB 4 TODO BEGIN */
-
+        sem->sem_count++;
+        if (sem->sem_count <= 0) {
+                sem->waiting_threads_count--;
+                sched_enqueue(list_entry(sem->waiting_threads.next,
+                                         struct thread,
+                                         sem_queue_node));
+                list_del(sem->waiting_threads.next);
+        }
         /* LAB 4 TODO END */
         return 0;
 }

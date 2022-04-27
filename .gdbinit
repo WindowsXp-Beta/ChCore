@@ -6,10 +6,6 @@ layout split
 file ./build/kernel.img
 
 set logging on
-set scheduler-locking step
-b page_table.c:463
-b page_table.c:340
-b page_table.c:357
-dis 2
-dis 3
+add-symbol-file ./userland/_install/yield_spin.bin
+b main.c:99
 fs cmd
