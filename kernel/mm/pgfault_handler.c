@@ -99,9 +99,9 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                          */
                         /* LAB 3 TODO BEGIN */
                         ret = map_range_in_pgtbl(vmspace->pgtbl,
-                                                 vmr->start,
+                                                 fault_addr,
                                                  pa,
-                                                 vmr->size,
+                                                 PAGE_SIZE,
                                                  perm);
                         if (ret != 0) {
                                 kwarn("map range in pgtbl failed");
