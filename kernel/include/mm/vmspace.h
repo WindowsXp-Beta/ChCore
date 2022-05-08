@@ -42,7 +42,7 @@ struct vmspace {
 };
 
 typedef u64 pmo_type_t;
-#define PMO_ANONYM       0 /* lazy allocation */
+#define PMO_ANONYM       0 /* lazy allocation: anonymous files */
 #define PMO_DATA         1 /* immediate allocation */
 #define PMO_SHM          3 /* shared memory */
 #define PMO_DEVICE       5 /* memory mapped device registers */

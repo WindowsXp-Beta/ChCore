@@ -16,8 +16,8 @@
 #include <common/list.h>
 
 struct semaphore {
-        u32 sem_count;
-        u32 waiting_threads_count;
+        s32 sem_count;
+        s32 waiting_threads_count;
         struct list_head waiting_threads;
 };
 

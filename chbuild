@@ -133,7 +133,7 @@ clean() {
 }
 
 rebuild() {
-    clean
+    # clean
     build
 }
 

@@ -14,6 +14,6 @@
 #include <common/vars.h>
 
 BEGIN_FUNC(idle_thread_routine)
-idle:   wfi
+idle:   wfi /* wait for interrupt */
         b idle
 END_FUNC(idle_thread_routine)

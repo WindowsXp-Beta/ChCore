@@ -36,7 +36,7 @@ void chcore_vaddr_free(u64 vaddr, u64 size)
 
 void *chcore_pmo_auto_map(int pmo_cap, u64 size, u64 perm)
 {
-        u64 vaddr = chcore_vaddr_alloc(size);
+        u64 vaddr = chcore_vaddr_alloc(size); // get size from mem_auto_alloc_region
         if (vaddr == 0)
                 return NULL;
         int ret = chcore_pmo_map(SELF_CAP, pmo_cap, vaddr, perm);

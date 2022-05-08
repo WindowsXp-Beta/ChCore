@@ -33,6 +33,7 @@ static int thread_init(struct thread *thread, struct cap_group *cap_group,
         thread->cap_group =
                 obj_get(cap_group, CAP_GROUP_OBJ_ID, TYPE_CAP_GROUP);
         thread->vmspace = obj_get(cap_group, VMSPACE_OBJ_ID, TYPE_VMSPACE);
+        //all the thread share the same virtual space
         obj_put(thread->cap_group);
         obj_put(thread->vmspace);
 
@@ -106,11 +107,22 @@ static u64 load_binary(struct cap_group *cap_group, struct vmspace *vmspace,
         for (i = 0; i < elf->header.e_phnum; ++i) {
                 pmo_cap[i] = -1;
                 if (elf->p_headers[i].p_type == PT_LOAD) {
-                        seg_sz = elf->p_headers[i].p_memsz;
-                        p_vaddr = elf->p_headers[i].p_vaddr;
+                        seg_sz = elf->p_headers[i].p_memsz;// memsz is the size in memory
+                        p_vaddr = elf->p_headers[i].p_vaddr;// vaddr is segment's start virtual address
                         /* LAB 3 TODO BEGIN */
-
-                        /* LAB 3 TODO END */
+                        seg_map_sz = ROUND_UP(p_vaddr + seg_sz, PAGE_SIZE)
+                                     - ROUND_DOWN(p_vaddr, PAGE_SIZE);
+                        pmo_cap[i] = create_pmo(
+                                seg_map_sz, PMO_DATA, cap_group, &pmo);//PMO_DATA means immediate allocation
+                        memcpy((void *)(phys_to_virt(pmo->start)
+                                        + (p_vaddr
+                                           - ROUND_DOWN(p_vaddr, PAGE_SIZE))),
+                               bin + elf->p_headers[i].p_offset,
+                               elf->p_headers[i].p_filesz/* size in file(disk)*/);
+                        flags = PFLAGS2VMRFLAGS(elf->p_headers[i].p_flags);
+                        ret = vmspace_map_range(
+                                vmspace, p_vaddr, seg_map_sz, flags, pmo);
+                        /* LAB 3 TODO END */ 
                         BUG_ON(ret != 0);
                 }
         }
@@ -188,7 +200,7 @@ static int __create_root_thread(struct cap_group *cap_group, u64 stack_base,
         pc = load_binary(cap_group, init_vmspace, bin_start, &meta);
         stack = stack_base + stack_size;
 
-        /* Allocate a physical for the main stack for prepare_env */
+        /* Allocate a physical page for the main stack for prepare_env */
         kva = (vaddr_t)get_pages(0);
         BUG_ON(kva == 0);
         commit_page_to_pmo(stack_pmo,
@@ -399,7 +411,9 @@ void sys_thread_exit(void)
         printk("\nBack to kernel.\n");
 #endif
         /* LAB 3 TODO BEGIN */
-
+        current_thread->thread_ctx->thread_exit_state = TE_EXITED;
+        current_thread->thread_ctx->state = TS_EXIT;
+        current_thread = NULL;
         /* LAB 3 TODO END */
         /* Reschedule */
         sched();
@@ -436,7 +450,7 @@ int sys_set_affinity(u64 thread_cap, s32 aff)
         }
 
         /* LAB 4 TODO BEGIN */
-
+        thread->thread_ctx->affinity = aff;
         /* LAB 4 TODO END */
         if (thread_cap != -1)
                 obj_put((void *)thread);
@@ -459,7 +473,7 @@ s32 sys_get_affinity(u64 thread_cap)
         if (thread == NULL)
                 return -ECAPBILITY;
         /* LAB 4 TODO BEGIN */
-
+        aff = thread->thread_ctx->affinity;
         /* LAB 4 TODO END */
 
         if (thread_cap != -1)

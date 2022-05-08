@@ -88,6 +88,23 @@ static struct page *get_buddy_chunk(struct phys_mem_pool *pool,
         return virt_to_page((void *)buddy_chunk_addr);
 }
 
+void set_chunk_order(struct page *page, int order)
+{
+        u64 page_num = 1 << order;
+        for (int page_idx = 0; page_idx < page_num; ++page_idx, ++page) {
+                page->order = order;
+        }
+}
+
+void set_chunk_allocation(struct page *page, bool allocated)
+{
+        int order = page->order;
+        u64 page_num = 1 << order;
+        for (int page_idx = 0; page_idx < page_num; ++page_idx, ++page) {
+                page->allocated = allocated;
+        }
+}
+
 static struct page *split_page(struct phys_mem_pool *pool, u64 order,
                                struct page *page)
 {
@@ -96,7 +113,16 @@ static struct page *split_page(struct phys_mem_pool *pool, u64 order,
          * Hint: Recursively put the buddy of current chunk into
          * a suitable free list.
          */
-
+        while (page->order > order) {
+                page->order--;
+                struct page *buddy_chunk = get_buddy_chunk(pool, page);
+                /* add buddy chunk to free list*/
+                set_chunk_order(buddy_chunk, page->order);
+                list_add(&buddy_chunk->node,
+                         &pool->free_lists[page->order].free_list);
+                pool->free_lists[page->order].nr_free++;
+        }
+        return page;
         /* LAB 2 TODO 2 END */
 }
 
@@ -108,6 +134,21 @@ struct page *buddy_get_pages(struct phys_mem_pool *pool, u64 order)
          * in the free lists, then split it if necessary.
          */
 
+        for (int i = order; i < BUDDY_MAX_ORDER; ++i) {
+                if (pool->free_lists[i].nr_free > 0) {
+                        pool->free_lists[i].nr_free--;
+                        struct page *ret_page = split_page(
+                                pool,
+                                order,
+                                list_entry(pool->free_lists[i].free_list.next,
+                                           struct page,
+                                           node));
+                        set_chunk_allocation(ret_page, true);
+                        list_del(&ret_page->node);
+                        return ret_page;
+                }
+        }
+        return NULL;
         /* LAB 2 TODO 2 END */
 }
 
@@ -118,7 +159,28 @@ static struct page *merge_page(struct phys_mem_pool *pool, struct page *page)
          * Hint: Recursively merge current chunk with its buddy
          * if possible.
          */
-
+        while (true) {
+                struct page *buddy_chunk = get_buddy_chunk(pool, page);
+                int order = page->order;
+                if (order < BUDDY_MAX_ORDER - 1 && buddy_chunk
+                    && buddy_chunk->order == order && !buddy_chunk->allocated) {
+                        /* remove buddy_chunk from free list */
+                        struct list_head *node = &buddy_chunk->node;
+                        struct list_head *p =
+                                pool->free_lists[order].free_list.next;
+                        while (p != node) {
+                                p = p->next;
+                        }
+                        list_del(p);
+                        pool->free_lists[order].nr_free--;
+                        /* update page and order */
+                        page = buddy_chunk < page ? buddy_chunk : page;
+                        page->order++;
+                } else {
+                        set_chunk_order(page, order);
+                        return page;
+                }
+        }
         /* LAB 2 TODO 2 END */
 }
 
@@ -129,7 +191,11 @@ void buddy_free_pages(struct phys_mem_pool *pool, struct page *page)
          * Hint: Merge the chunk with its buddy and put it into
          * a suitable free list.
          */
-
+        set_chunk_allocation(page, false);
+        page = merge_page(pool, page);
+        /* add to free list */
+        pool->free_lists[page->order].nr_free++;
+        list_add(&page->node, &pool->free_lists[page->order].free_list);
         /* LAB 2 TODO 2 END */
 }
 

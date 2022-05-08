@@ -12,6 +12,7 @@
 
 #pragma once
 
+#define SZ_4K 0x1000
 #define SZ_16K 0x4000
 #define SZ_64K 0x10000
 
