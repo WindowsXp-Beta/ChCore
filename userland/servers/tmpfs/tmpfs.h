@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) 2022 Institute of Parallel And Distributed Systems (IPADS)
  * ChCore-Lab is licensed under the Mulan PSL v1.
@@ -9,6 +10,7 @@
  * PURPOSE.
  * See the Mulan PSL v1 for more details.
  */
+// clang-format on
 
 #pragma once
 
@@ -45,11 +47,12 @@ int tfs_namex(struct inode **dirat, const char **name, int mkdir_p);
 int tfs_remove(struct inode *dir, const char *name, size_t len);
 
 ssize_t tfs_file_read(struct inode *inode, off_t offset, char *buff,
-		      size_t size);
+                      size_t size);
 ssize_t tfs_file_write(struct inode *inode, off_t offset, const char *data,
-		       size_t size);
+                       size_t size);
 
-int tfs_scan(struct inode *dir, unsigned int start, void *buf, void *end, int *readbytes);
+int tfs_scan(struct inode *dir, unsigned int start, void *buf, void *end,
+             int *readbytes);
 struct inode *tfs_open_path(const char *path);
 
 int tfs_load_image(const char *start);
@@ -58,16 +61,14 @@ int del_inode(struct inode *inode);
 
 static inline struct inode *get_inode(struct inode *i)
 {
-	i->refcnt++;
-	return i;
+        i->refcnt++;
+        return i;
 }
-static inline int put_inode(struct inode *i) {
-	i->refcnt--;
-	chcore_assert(i->refcnt >= 0);
-	if (!i->refcnt)
-		return del_inode(i);
-	return 0;
+static inline int put_inode(struct inode *i)
+{
+        i->refcnt--;
+        chcore_assert(i->refcnt >= 0);
+        if (!i->refcnt)
+                return del_inode(i);
+        return 0;
 }
-
-
-
