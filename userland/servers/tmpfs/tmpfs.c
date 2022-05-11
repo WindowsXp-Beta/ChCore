@@ -424,7 +424,6 @@ int tfs_load_image(const char *start)
                 leaf = f->name;
                 len = strlen(f->name);
                 int file_type = f->header.c_mode & CPIO_FT_MASK;
-                printf("leaf is %s\n", leaf);
                 err = tfs_namex(&dirat, &leaf, 1);
                 if (err) {
                         return err;

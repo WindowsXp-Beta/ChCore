@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) 2022 Institute of Parallel And Distributed Systems (IPADS)
  * ChCore-Lab is licensed under the Mulan PSL v1.
@@ -9,6 +10,7 @@
  * PURPOSE.
  * See the Mulan PSL v1 for more details.
  */
+// clang-format on
 
 #include <stdio.h>
 #include <string.h>
@@ -20,29 +22,27 @@
 #include <chcore/internal/server_caps.h>
 #include <chcore/procm.h>
 #include <chcore/fs/defs.h>
+#include <chcore/console.h>
 
 extern struct ipc_struct *tmpfs_ipc_struct;
 
-typedef struct FILE {
-	/* LAB 5 TODO BEGIN */
+#define BUF_SIZE 1024
 
-	/* LAB 5 TODO END */
+typedef struct FILE {
+        /* LAB 5 TODO BEGIN */
+        int fd;
+        int mode;
+        /* LAB 5 TODO END */
 } FILE;
 
-FILE *fopen(const char * filename, const char * mode);
+FILE *fopen(const char *filename, const char *mode);
 
-size_t fwrite(const void * src, size_t size, size_t nmemb, FILE * f);
+size_t fwrite(const void *src, size_t size, size_t nmemb, FILE *f);
 
-size_t fread(void * destv, size_t size, size_t nmemb, FILE * f);
+size_t fread(void *destv, size_t size, size_t nmemb, FILE *f);
 
 int fclose(FILE *f);
 
-int fscanf(FILE * f, const char * fmt, ...);
+int fscanf(FILE *f, const char *fmt, ...);
 
-int fprintf(FILE * f, const char * fmt, ...);
-
-typedef __builtin_va_list va_list;
-#define va_start(v, l) __builtin_va_start(v, l)
-#define va_end(v)      __builtin_va_end(v)
-#define va_arg(v, l)   __builtin_va_arg(v, l)
-#define va_copy(d, s)  __builtin_va_copy(d, s)
+int fprintf(FILE *f, const char *fmt, ...);
