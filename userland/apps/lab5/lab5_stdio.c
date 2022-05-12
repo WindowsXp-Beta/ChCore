@@ -69,12 +69,12 @@ FILE *fopen(const char *filename, const char *mode)
                                 (struct fs_request *)ipc_get_msg_data(
                                         ipc_msg_create);
                         fr_create->req = FS_REQ_CREAT;
+                        // fr->creat.mode: we don't use this field in tmpfs
                         strcpy(fr_create->creat.pathname, filename);
                         ret = ipc_call(tmpfs_ipc_struct, ipc_msg_create);
                         ipc_destroy_msg(tmpfs_ipc_struct, ipc_msg_create);
                         if (ret < 0)
                                 chcore_bug("create file failed!");
-                        // fr->creat.mode: we don't use this field in tmpfs
                         // call open again
                         printf("reopen file %s\n", filename);
                         ret = open_file(filename, fp);

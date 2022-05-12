@@ -34,3 +34,4 @@ __pycache__
 kernel.S
 # macOS
 *.DS_store
+gdb.txt
