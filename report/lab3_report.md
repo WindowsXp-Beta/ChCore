@@ -18,6 +18,6 @@
 
    > 这就是为什么page fault的时候会出现pa不等于0（有物理页）但是没页表（因为此时是在内核态，用户态的页表还是没的）的情况）init_chcorelibc会先读sp处的一个long，而此时sp指向这个物理页的底部，读的这个long是在这个物理页里的
 
-4. thread init。主要初始化了tcb（struct thread保存了thread_tcx的指针，thread_tcx通过create_thread_tcx初始化，这个函数会精细控制tcb的位置，详见（kernel/sched/context.c））
+4. thread init。主要初始化了tcb (`thread_ctx` in chcore)（struct thread保存了thread_tcx的指针，thread_tcx通过create_thread_tcx初始化，这个函数会精细控制tcb的位置，详见（kernel/sched/context.c））
 
 5. 把这个thread list_add到cap_group的thread list中。
